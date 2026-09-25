@@ -124,6 +124,7 @@ export function unavailableResponse(statusCode, message, retryAfter, retryAfterH
       headers: {
         ...extraHeaders,
         "Content-Type": "application/json",
+        // Intentionally mis-cased to prevent duplicate headers
         "retry-after": String(retryAfterSec)
       }
     }
