@@ -44,7 +44,11 @@ export function expandContextMarkerTwins(models) {
     if (typeof id !== "string" || id.includes("/") || !CLAUDE_DISCOVERY_ID.test(id) || stripModelContextMarker(id).contextMarker) continue;
     const window = entry.context_length ?? entry.capabilities?.contextWindow;
     if (!Number.isFinite(window) || window < CONTEXT_MARKER_MIN_WINDOW) continue;
-    out.push({ ...entry, id: withModelContextMarker(id), display_name: `${entry.display_name || id} (1M context)` });
+    // No display_name: Claude Code only derives its own label ("Opus 5.5 (1M
+    // context)") for a discovered row whose label is the bare id.
+    const twin = { ...entry, id: withModelContextMarker(id) };
+    delete twin.display_name;
+    out.push(twin);
   }
   return out;
 }

@@ -70,7 +70,8 @@ describe("expandContextMarkerTwins", () => {
   it("adds a [1m] twin right after a 1M Claude combo", () => {
     const out = expandContextMarkerTwins([combo]);
     expect(out.map((m) => m.id)).toEqual(["claude-opus-5-5", "claude-opus-5-5[1m]"]);
-    expect(out[1]).toMatchObject({ owned_by: "combo", context_length: 1_000_000, display_name: "claude-opus-5-5 (1M context)" });
+    expect(out[1]).toMatchObject({ owned_by: "combo", context_length: 1_000_000 });
+    expect(out[1]).not.toHaveProperty("display_name");
   });
 
   it("reads the window from capabilities when context_length is absent", () => {
