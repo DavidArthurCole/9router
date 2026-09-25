@@ -165,6 +165,9 @@ export async function handleChat(request, clientRawRequest = null) {
  * Handle single model chat request
  */
 async function handleSingleModelChat(body, modelStr, clientRawRequest = null, request = null, apiKey = null) {
+  // Combo targets and `/v1/models` twins carry the marker too
+  // (`cc/claude-opus-5-5[1m]`); upstream answers it with 404 "model: …[1m]".
+  modelStr = stripModelContextMarker(modelStr).model;
   const modelInfo = await getModelInfo(modelStr);
 
   // If provider is null, this might be a combo name - check and handle

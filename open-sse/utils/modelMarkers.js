@@ -18,3 +18,32 @@ export function stripModelContextMarker(modelStr) {
   if (!match) return { model: modelStr, contextMarker: null };
   return { model: trimmed.slice(0, -match[0].length), contextMarker: match[0].slice(1, -1).toLowerCase() };
 }
+
+// Idempotent: never stacks `[1m][1m]`.
+export function withModelContextMarker(modelStr) {
+  return `${stripModelContextMarker(modelStr).model}[1m]`;
+}
+
+// Behind a gateway Claude Code assumes a 200K window for every id (even ones it
+// recognises) unless the id carries `[1m]`, and it keeps a discovered
+// `/v1/models` entry only when the id contains "claude" or "anthropic". A combo
+// name can't hold the marker (the dashboard rejects `[`), so the catalog emits a
+// `<id>[1m]` twin after each Claude-named entry whose real window is at least
+// 1M; the marker is stripped again at the chat handler so the twin routes like
+// its base id.
+const CONTEXT_MARKER_MIN_WINDOW = 1_000_000;
+const CLAUDE_DISCOVERY_ID = /claude|anthropic/i;
+
+export function expandContextMarkerTwins(models) {
+  if (!Array.isArray(models)) return models;
+  const out = [];
+  for (const entry of models) {
+    out.push(entry);
+    const id = entry?.id;
+    if (typeof id !== "string" || !CLAUDE_DISCOVERY_ID.test(id) || stripModelContextMarker(id).contextMarker) continue;
+    const window = entry.context_length ?? entry.capabilities?.contextWindow;
+    if (!Number.isFinite(window) || window < CONTEXT_MARKER_MIN_WINDOW) continue;
+    out.push({ ...entry, id: withModelContextMarker(id), display_name: `${entry.display_name || id} (1M context)` });
+  }
+  return out;
+}
