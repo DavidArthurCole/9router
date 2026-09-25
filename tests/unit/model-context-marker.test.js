@@ -74,18 +74,18 @@ describe("expandContextMarkerTwins", () => {
   });
 
   it("reads the window from capabilities when context_length is absent", () => {
-    const out = expandContextMarkerTwins([{ id: "cc/claude-sonnet-5", capabilities: { contextWindow: 1_000_000 } }]);
+    const out = expandContextMarkerTwins([{ id: "claude-sonnet-5", capabilities: { contextWindow: 1_000_000 } }]);
     expect(out).toHaveLength(2);
   });
 
-  it("skips 200K windows, non-Claude ids, and ids already marked", () => {
+  it("skips provider-prefixed ids, 200K windows, non-Claude ids, and ids already marked", () => {
     const out = expandContextMarkerTwins([
+      { id: "cc/claude-opus-5-5", context_length: 1_000_000 },
       { id: "claude-haiku-4-5", context_length: 200_000 },
-      { id: "ocg/deepseek-v4-pro", context_length: 1_000_000 },
+      { id: "deepseek-v4-pro", context_length: 1_000_000 },
       { id: "claude-opus-5-5[1m]", context_length: 1_000_000 },
-      { id: "cc/claude-opus-5-5" },
     ]);
-    expect(out.map((m) => m.id)).toEqual(["claude-haiku-4-5", "ocg/deepseek-v4-pro", "claude-opus-5-5[1m]", "cc/claude-opus-5-5"]);
+    expect(out.map((m) => m.id)).toEqual(["cc/claude-opus-5-5", "claude-haiku-4-5", "deepseek-v4-pro", "claude-opus-5-5[1m]"]);
   });
 
   it("passes non-arrays through", () => {
